@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class IPUtilTest {
@@ -21,7 +22,24 @@ class IPUtilTest {
     "177.28.75.88",
     "57.229.35.201"})
   @DisplayName("ValidateIP should return true if IP is correct")
-  void validateIPShouldReturnTrueIfIPIsCorrect(String ip) {
+  void validateIPShouldReturnTrueIfIPIsCorrect(final String ip) {
     assertTrue(IPUtil.validateIP(ip));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "1191.175.208.93",
+    "10.23249.251",
+    "151.257.133.1",
+    "151.5795.64",
+    "96.236.227.0125",
+    "01.68.227.41",
+    "999.20.213.239",
+    "-200.33.228.124",
+    "177.28.75.0000",
+    "57.229.35.XXXX"})
+  @DisplayName("ValidateIP should return false if IP is incorrect")
+  void validateIPShouldReturnFalseIfIPIsIncorrect(final String ip) {
+    assertFalse(IPUtil.validateIP(ip));
   }
 }

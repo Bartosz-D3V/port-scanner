@@ -13,7 +13,7 @@ matrix:
   fast_finish: true
 
 install:
-  - mvn compile exec:java -DskipTests -e
+  - mvn compile -DskipTests -e
 
 script:
   - mvn test
