@@ -20,7 +20,8 @@ class IPUtilTest {
     "133.20.213.239",
     "177.33.228.124",
     "177.28.75.88",
-    "57.229.35.201"})
+    "57.229.35.201"
+  })
   @DisplayName("ValidateIP should return true if IP is correct")
   void validateIPShouldReturnTrueIfIPIsCorrect(final String ip) {
     assertTrue(IPUtil.validateIP(ip));
@@ -37,7 +38,8 @@ class IPUtilTest {
     "999.20.213.239",
     "-200.33.228.124",
     "177.28.75.0000",
-    "57.229.35.XXXX"})
+    "57.229.35.XXXX"
+  })
   @DisplayName("ValidateIP should return false if IP is incorrect")
   void validateIPShouldReturnFalseIfIPIsIncorrect(final String ip) {
     assertFalse(IPUtil.validateIP(ip));

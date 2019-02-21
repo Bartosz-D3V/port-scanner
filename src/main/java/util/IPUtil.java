@@ -13,6 +13,7 @@ public class IPUtil {
     try {
       return Arrays
         .stream(groups)
+        .filter(group -> group.length() > 0 && !group.startsWith("0"))
         .map(Integer::parseInt)
         .filter(group -> (group >= 0 && group <= 255))
         .count() == 4;
