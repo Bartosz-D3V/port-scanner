@@ -1,3 +1,4 @@
+import service.IPScannerService;
 import util.IPUtil;
 
 import java.util.Scanner;
@@ -11,5 +12,7 @@ public final class Main {
       System.out.print("Invalid IP address. Re-type: ");
       ip = scanner.next();
     }
+    final IPScannerService scannerService = new IPScannerService();
+    scannerService.scanIP(ip);
   }
 }
