@@ -1,7 +1,6 @@
 package service;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -18,6 +17,7 @@ public class IPScannerService {
   public void scanIP(final String ip) {
     final int[] ports = getPorts();
     final int[] openPorts = getOpenPorts(ip, ports);
+    System.out.print(openPorts.length);
   }
 
   private static int[] getPorts() {
@@ -27,25 +27,23 @@ public class IPScannerService {
   private int[] getOpenPorts(final String ip, final int[] ports) {
     final ExecutorService executorService = Executors.newFixedThreadPool(DIVIDER);
     final ConcurrentLinkedQueue<Integer> openPorts = new ConcurrentLinkedQueue<>();
+    int[][] partialPorts = divideArray(ports, DIVIDER);
     AtomicInteger arrayOffset = new AtomicInteger(0);
-    IntStream
-      .range(0, ports.length / DIVIDER)
-      .forEach((i) -> executorService.submit(() -> {
-        int[] partialPorts = divideArray(ports, arrayOffset.getAndIncrement());
+    Arrays
+      .stream(partialPorts)
+      .forEach((i) -> executorService.submit(() ->
         Arrays
-          .stream(partialPorts)
+          .stream(partialPorts[arrayOffset.getAndIncrement()])
           .forEach(port -> {
-            System.out.println(port);
             try {
-              final Socket socket = new Socket();
-              socket.connect(new InetSocketAddress(ip, port));
+              final Socket socket = new Socket(ip, port);
               openPorts.add(port);
               socket.close();
+              logger.info("JEEEEEEEEEEEEEEEEEEEES");
             } catch (final IOException e) {
-//            logger.info("Port: " + ip + " is closed.");
+//              logger.info("Port: " + port + " is closed.");
             }
-          });
-      }));
+          })));
 
     return openPorts
       .stream()
@@ -53,7 +51,11 @@ public class IPScannerService {
       .toArray();
   }
 
-  private static int[] divideArray(final int[] array, final int offset) {
-    return Arrays.copyOfRange(array, (offset * (array.length / (array.length / DIVIDER))), ((offset + 1) * DIVIDER));
+  private static int[][] divideArray(final int[] array, final int size) {
+    final int[][] smallArrays = new int[(array.length / size) + 1][size];
+    for (int i = 0; i < array.length / size; i++) {
+      smallArrays[i] = Arrays.copyOfRange(array, size * i, size * i + size);
+    }
+    return smallArrays;
   }
 }
