@@ -17,22 +17,24 @@ import java.util.stream.IntStream;
 
 public class IPScannerService {
   private final static Logger logger = Logger.getLogger(IPScannerService.class.getName());
-  private final static int DIVIDER = 100;
+  private final static int PORTS_PER_THREAD = 50;
 
-  public int[] scanIP(final String ip) {
+  public List<Integer> scanIP(final String ip) {
     final int[] ports = getPorts();
     final List<Future<List<ScanResult>>> scanResults = getOpenPorts(ip, ports);
     final List<Integer> openPorts = new ArrayList<>();
-    for(Future<List<ScanResult>> future: scanResults) {
+    for (Future<List<ScanResult>> future : scanResults) {
       try {
-        openPorts.add(future.get().stream().filter(ScanResult::isOpen).map(scanResult -> scanResult.getPort()));
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      } catch (ExecutionException e) {
-        e.printStackTrace();
+        for (ScanResult scanResult : future.get()) {
+          if (scanResult.isOpen()) {
+            openPorts.add(scanResult.getPort());
+          }
+        }
+      } catch (InterruptedException | ExecutionException e) {
+        logger.warning(e.getLocalizedMessage());
       }
     }
-    System.out.print(openPorts.size());
+    return openPorts;
   }
 
   private static int[] getPorts() {
@@ -40,29 +42,29 @@ public class IPScannerService {
   }
 
   private List<Future<List<ScanResult>>> getOpenPorts(final String ip, final int[] ports) {
-    final ExecutorService executorService = Executors.newFixedThreadPool(DIVIDER);
-    int[][] partialPorts = divideArray(ports, DIVIDER);
+    final ExecutorService executorService = Executors.newFixedThreadPool(PORTS_PER_THREAD);
+    final int[][] partialPorts = divideArray(ports, PORTS_PER_THREAD);
     final List<Future<List<ScanResult>>> openPorts = new ArrayList<>();
 
     for (int[] partialPortsSubArray : partialPorts) {
-      openPorts.add(executorService.submit(() -> {
-        final List<ScanResult> scanResults = new ArrayList<>();
-        for (int port : partialPortsSubArray) {
-          ScanResult scanResult = new ScanResult(port, false);
-          try {
-            final Socket socket = new Socket();
-            socket.connect(new InetSocketAddress(ip, port), 200);
-            socket.close();
-            scanResult.setOpen(true);
-            logger.info("JEEEEEEEEEEEEEEEEEEEES");
-          } catch (final IOException e) {
-            logger.info("ScanResult: " + port + " is closed.");
-          } finally {
-            scanResults.add(scanResult);
+      openPorts
+        .add(executorService.submit(() -> {
+          final List<ScanResult> scanResults = new ArrayList<>();
+          for (int port : partialPortsSubArray) {
+            ScanResult scanResult = new ScanResult(port, false);
+            try {
+              final Socket socket = new Socket();
+              socket.connect(new InetSocketAddress(ip, port), 500);
+              socket.close();
+              scanResult.setOpen(true);
+            } catch (final IOException e) {
+              logger.info(port + " is closed.");
+            } finally {
+              scanResults.add(scanResult);
+            }
           }
-        }
-        return scanResults;
-      }));
+          return scanResults;
+        }));
     }
     executorService.shutdown();
     return openPorts;

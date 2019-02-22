@@ -1,4 +1,5 @@
 import service.IPScannerService;
+import util.FormatUtil;
 
 import java.util.Scanner;
 
@@ -11,7 +12,10 @@ public final class Main {
 //      System.out.print("Invalid IP address. Re-type: ");
 //      ip = scanner.next();
 //    }
-    final IPScannerService scannerService = new IPScannerService();
-    scannerService.scanIP(ip);
+    final long startTime = System.currentTimeMillis();
+    final String openIPs = FormatUtil.formatList(new IPScannerService().scanIP(ip));
+    final long endTime = System.currentTimeMillis();
+    System.out.println(openIPs);
+    System.out.println("Executed in: " + (endTime - startTime) / 60000 + " minutes");
   }
 }
