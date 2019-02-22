@@ -1,13 +1,17 @@
 package service;
 
+import domain.ScanResult;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.Future;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
@@ -15,9 +19,19 @@ public class IPScannerService {
   private final static Logger logger = Logger.getLogger(IPScannerService.class.getName());
   private final static int DIVIDER = 100;
 
-  public void scanIP(final String ip) {
+  public int[] scanIP(final String ip) {
     final int[] ports = getPorts();
-    final ConcurrentLinkedQueue<Integer> openPorts = getOpenPorts(ip, ports);
+    final List<Future<List<ScanResult>>> scanResults = getOpenPorts(ip, ports);
+    final List<Integer> openPorts = new ArrayList<>();
+    for(Future<List<ScanResult>> future: scanResults) {
+      try {
+        openPorts.add(future.get().stream().filter(ScanResult::isOpen).map(scanResult -> scanResult.getPort()));
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      } catch (ExecutionException e) {
+        e.printStackTrace();
+      }
+    }
     System.out.print(openPorts.size());
   }
 
@@ -25,27 +39,31 @@ public class IPScannerService {
     return IntStream.range(0, 65535).toArray();
   }
 
-  private ConcurrentLinkedQueue<Integer> getOpenPorts(final String ip, final int[] ports) {
+  private List<Future<List<ScanResult>>> getOpenPorts(final String ip, final int[] ports) {
     final ExecutorService executorService = Executors.newFixedThreadPool(DIVIDER);
-    final ConcurrentLinkedQueue<Integer> openPorts = new ConcurrentLinkedQueue<>();
     int[][] partialPorts = divideArray(ports, DIVIDER);
-    AtomicInteger arrayOffset = new AtomicInteger(0);
-    Arrays
-      .stream(partialPorts)
-      .forEach((i) -> executorService.submit(() ->
-        Arrays
-          .stream(partialPorts[arrayOffset.getAndIncrement()])
-          .forEach(port -> {
-            try {
-              final Socket socket = new Socket();
-              socket.connect(new InetSocketAddress(ip, port), 200);
-              socket.close();
-              openPorts.add(port);
-              logger.info("JEEEEEEEEEEEEEEEEEEEES");
-            } catch (final IOException e) {
-              logger.info("Port: " + port + " is closed.");
-            }
-          })));
+    final List<Future<List<ScanResult>>> openPorts = new ArrayList<>();
+
+    for (int[] partialPortsSubArray : partialPorts) {
+      openPorts.add(executorService.submit(() -> {
+        final List<ScanResult> scanResults = new ArrayList<>();
+        for (int port : partialPortsSubArray) {
+          ScanResult scanResult = new ScanResult(port, false);
+          try {
+            final Socket socket = new Socket();
+            socket.connect(new InetSocketAddress(ip, port), 200);
+            socket.close();
+            scanResult.setOpen(true);
+            logger.info("JEEEEEEEEEEEEEEEEEEEES");
+          } catch (final IOException e) {
+            logger.info("ScanResult: " + port + " is closed.");
+          } finally {
+            scanResults.add(scanResult);
+          }
+        }
+        return scanResults;
+      }));
+    }
     executorService.shutdown();
     return openPorts;
   }
