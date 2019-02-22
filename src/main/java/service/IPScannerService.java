@@ -1,6 +1,7 @@
 package service;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -16,15 +17,15 @@ public class IPScannerService {
 
   public void scanIP(final String ip) {
     final int[] ports = getPorts();
-    final int[] openPorts = getOpenPorts(ip, ports);
-    System.out.print(openPorts.length);
+    final ConcurrentLinkedQueue<Integer> openPorts = getOpenPorts(ip, ports);
+    System.out.print(openPorts.size());
   }
 
   private static int[] getPorts() {
     return IntStream.range(0, 65535).toArray();
   }
 
-  private int[] getOpenPorts(final String ip, final int[] ports) {
+  private ConcurrentLinkedQueue<Integer> getOpenPorts(final String ip, final int[] ports) {
     final ExecutorService executorService = Executors.newFixedThreadPool(DIVIDER);
     final ConcurrentLinkedQueue<Integer> openPorts = new ConcurrentLinkedQueue<>();
     int[][] partialPorts = divideArray(ports, DIVIDER);
@@ -36,19 +37,17 @@ public class IPScannerService {
           .stream(partialPorts[arrayOffset.getAndIncrement()])
           .forEach(port -> {
             try {
-              final Socket socket = new Socket(ip, port);
-              openPorts.add(port);
+              final Socket socket = new Socket();
+              socket.connect(new InetSocketAddress(ip, port), 200);
               socket.close();
+              openPorts.add(port);
               logger.info("JEEEEEEEEEEEEEEEEEEEES");
             } catch (final IOException e) {
-//              logger.info("Port: " + port + " is closed.");
+              logger.info("Port: " + port + " is closed.");
             }
           })));
-
-    return openPorts
-      .stream()
-      .mapToInt(Integer::intValue)
-      .toArray();
+    executorService.shutdown();
+    return openPorts;
   }
 
   private static int[][] divideArray(final int[] array, final int size) {
