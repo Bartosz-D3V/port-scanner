@@ -20,7 +20,9 @@ class IPUtilTest {
     "133.20.213.239",
     "177.33.228.124",
     "177.28.75.88",
-    "57.229.35.201"
+    "57.229.35.201",
+    "127.0.0.1",
+    "8.8.8.8",
   })
   @DisplayName("ValidateIP should return true if IP is correct")
   void validateIPShouldReturnTrueIfIPIsCorrect(final String ip) {

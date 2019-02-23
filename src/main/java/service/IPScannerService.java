@@ -17,11 +17,10 @@ import java.util.stream.IntStream;
 
 public class IPScannerService {
   private final static Logger logger = Logger.getLogger(IPScannerService.class.getName());
-  private final static int PORTS_PER_THREAD = 50;
+  private final static int PORTS_PER_THREAD = 20;
 
   public List<Integer> scanIP(final String ip) {
-    final int[] ports = getPorts();
-    final List<Future<List<ScanResult>>> scanResults = getOpenPorts(ip, ports);
+    final List<Future<List<ScanResult>>> scanResults = getOpenPorts(ip, getPorts());
     final List<Integer> openPorts = new ArrayList<>();
     for (Future<List<ScanResult>> future : scanResults) {
       try {
@@ -31,7 +30,7 @@ public class IPScannerService {
           }
         }
       } catch (InterruptedException | ExecutionException e) {
-        logger.warning(e.getLocalizedMessage());
+        logger.warning(e.getMessage());
       }
     }
     return openPorts;
@@ -46,15 +45,15 @@ public class IPScannerService {
     final int[][] partialPorts = divideArray(ports, PORTS_PER_THREAD);
     final List<Future<List<ScanResult>>> openPorts = new ArrayList<>();
 
-    for (int[] partialPortsSubArray : partialPorts) {
+    for (final int[] partialPortsSubArray : partialPorts) {
       openPorts
         .add(executorService.submit(() -> {
           final List<ScanResult> scanResults = new ArrayList<>();
           for (int port : partialPortsSubArray) {
-            ScanResult scanResult = new ScanResult(port, false);
+            final ScanResult scanResult = new ScanResult(port, false);
             try {
               final Socket socket = new Socket();
-              socket.connect(new InetSocketAddress(ip, port), 500);
+              socket.connect(new InetSocketAddress(ip, port), 200);
               socket.close();
               scanResult.setOpen(true);
             } catch (final IOException e) {
@@ -71,7 +70,7 @@ public class IPScannerService {
   }
 
   private static int[][] divideArray(final int[] array, final int size) {
-    final int[][] smallArrays = new int[(array.length / size) + 1][size];
+    final int[][] smallArrays = new int[(array.length / size) + 1][];
     for (int i = 0; i < array.length / size; i++) {
       smallArrays[i] = Arrays.copyOfRange(array, size * i, size * i + size);
     }
