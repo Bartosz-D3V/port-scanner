@@ -20,6 +20,7 @@ Run app using MVN (see below), or simply start Main.java file using java, or you
 Application will prompt for IP you want to scan and start scanning all ports (from 0 to 65535).
 
 *Word of caution*
+
 Scanning port other than your local one might attract attention of third party services.
 
 ## Install
