@@ -1,6 +1,7 @@
 package service;
 
 import domain.ScanResult;
+import util.CollectionUtil;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -19,8 +20,8 @@ public class IPScannerService {
   private final static Logger logger = Logger.getLogger(IPScannerService.class.getName());
   private final static int PORTS_PER_THREAD = 20;
 
-  public synchronized List<Integer> scanIP(final String ip) {
-    final List<Future<List<ScanResult>>> scanResults = getOpenPorts(ip, getPorts());
+  public List<Integer> scanIP(final String ip) {
+    final List<Future<List<ScanResult>>> scanResults = getOpenPorts(ip, IntStream.range(0, 65535).toArray());
     final List<Integer> openPorts = new ArrayList<>();
     for (Future<List<ScanResult>> future : scanResults) {
       try {
@@ -37,13 +38,9 @@ public class IPScannerService {
     return openPorts;
   }
 
-  private static int[] getPorts() {
-    return IntStream.range(0, 65535).toArray();
-  }
-
   private List<Future<List<ScanResult>>> getOpenPorts(final String ip, final int[] ports) {
     final ExecutorService executorService = Executors.newFixedThreadPool(PORTS_PER_THREAD);
-    final int[][] partialPorts = divideArray(ports, PORTS_PER_THREAD);
+    final int[][] partialPorts = CollectionUtil.divideArray(ports, PORTS_PER_THREAD);
     final List<Future<List<ScanResult>>> openPorts = new ArrayList<>();
 
     Arrays
@@ -65,22 +62,14 @@ public class IPScannerService {
     return scanResults;
   }
 
-  private static boolean connect(final Socket socket, final String ip, final int port) {
+  static boolean connect(final Socket socket, final String ip, final int port) {
     try {
       socket.connect(new InetSocketAddress(ip, port), 200);
       socket.close();
       return true;
     } catch (final IOException e) {
-      logger.info(port + " is closed.");
+      logger.info("Port: " + port + " is closed.");
       return false;
     }
-  }
-
-  private static int[][] divideArray(final int[] array, final int size) {
-    final int[][] smallArrays = new int[(array.length / size) + 1][];
-    for (int i = 0; i < array.length / size; i++) {
-      smallArrays[i] = Arrays.copyOfRange(array, size * i, size * i + size);
-    }
-    return smallArrays;
   }
 }
