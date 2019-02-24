@@ -1,4 +1,4 @@
-package service;
+package scanner;
 
 import domain.ScanResult;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,11 +24,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 
-class IPScannerServiceTest {
+class IPScannerTest {
   private final static String IP = "127.0.0.1";
 
   @Spy
-  private IPScannerService scannerService;
+  private IPScanner scannerService;
 
   @Mock
   private Socket socket;

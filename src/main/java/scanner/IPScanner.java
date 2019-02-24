@@ -1,4 +1,4 @@
-package service;
+package scanner;
 
 import domain.ScanResult;
 import util.CollectionUtil;
@@ -15,8 +15,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
-public class IPScannerService {
-  private final static Logger logger = Logger.getLogger(IPScannerService.class.getName());
+public class IPScanner {
+  private final static Logger logger = Logger.getLogger(IPScanner.class.getName());
   private final static int PORTS_PER_THREAD = 20;
 
   public List<Integer> scanIP(final String ip, final int[] ports) {
@@ -37,7 +37,7 @@ public class IPScannerService {
     return openPorts;
   }
 
-  List<Future<List<ScanResult>>> getOpenPorts(final String ip, final int[] ports) {
+  private List<Future<List<ScanResult>>> getOpenPorts(final String ip, final int[] ports) {
     final ExecutorService executorService = Executors.newFixedThreadPool(PORTS_PER_THREAD);
     final int[][] partialPorts = CollectionUtil.divideArray(ports, PORTS_PER_THREAD);
     final List<Future<List<ScanResult>>> openPorts = new ArrayList<>();
