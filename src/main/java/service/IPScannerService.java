@@ -14,14 +14,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
-import java.util.stream.IntStream;
 
 public class IPScannerService {
   private final static Logger logger = Logger.getLogger(IPScannerService.class.getName());
   private final static int PORTS_PER_THREAD = 20;
 
-  public List<Integer> scanIP(final String ip) {
-    final List<Future<List<ScanResult>>> scanResults = getOpenPorts(ip, IntStream.range(0, 65535).toArray());
+  public List<Integer> scanIP(final String ip, final int[] ports) {
+    final List<Future<List<ScanResult>>> scanResults = getOpenPorts(ip, ports);
     final List<Integer> openPorts = new ArrayList<>();
     for (Future<List<ScanResult>> future : scanResults) {
       try {

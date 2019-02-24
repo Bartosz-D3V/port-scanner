@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -73,5 +74,20 @@ class IPScannerServiceTest {
 
     assertEquals(65500, results.get(3).getPort());
     assertTrue(results.get(3).isOpen());
+  }
+
+  @Test
+  @DisplayName("scanIP should return open ports")
+  void scanIPShouldReturnOpenPorts() {
+    final ScanResult scanResult1 = new ScanResult(1, true);
+    final ScanResult scanResult2 = new ScanResult(2, false);
+    final ScanResult scanResult3 = new ScanResult(3, true);
+    final List<ScanResult> scanResults = Arrays.asList(scanResult1, scanResult2, scanResult3);
+    doReturn(scanResults).when(scannerService).getOpenPortsSync(IP, new int[]{1, 2, 3});
+
+    final List<Integer> openPorts = scannerService.scanIP(IP, new int[]{1, 2, 3});
+
+    assertEquals(scanResult1.getPort(), openPorts.get(0));
+    assertEquals(scanResult3.getPort(), openPorts.get(1));
   }
 }

@@ -3,6 +3,7 @@ import util.FormatUtil;
 import util.IPUtil;
 
 import java.util.Scanner;
+import java.util.stream.IntStream;
 
 public final class Main {
   public static void main(final String[] args) {
@@ -14,7 +15,7 @@ public final class Main {
       ip = scanner.next();
     }
     final long startTime = System.currentTimeMillis();
-    final String openIPs = FormatUtil.formatList(new IPScannerService().scanIP(ip));
+    final String openIPs = FormatUtil.formatList(new IPScannerService().scanIP(ip, IntStream.range(0, 65535).toArray()));
     final long endTime = System.currentTimeMillis();
     System.out.println(openIPs);
     System.out.println("Executed in: " + (endTime - startTime) / 60000 + " minutes");
