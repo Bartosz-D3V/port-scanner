@@ -38,7 +38,7 @@ public class IPScannerService {
     return openPorts;
   }
 
-  private List<Future<List<ScanResult>>> getOpenPorts(final String ip, final int[] ports) {
+  List<Future<List<ScanResult>>> getOpenPorts(final String ip, final int[] ports) {
     final ExecutorService executorService = Executors.newFixedThreadPool(PORTS_PER_THREAD);
     final int[][] partialPorts = CollectionUtil.divideArray(ports, PORTS_PER_THREAD);
     final List<Future<List<ScanResult>>> openPorts = new ArrayList<>();
@@ -52,7 +52,7 @@ public class IPScannerService {
     return openPorts;
   }
 
-  private List<ScanResult> getOpenPortsSync(final String ip, final int ports[]) {
+  List<ScanResult> getOpenPortsSync(final String ip, final int ports[]) {
     final List<ScanResult> scanResults = new ArrayList<>();
     for (int port : ports) {
       final ScanResult scanResult = new ScanResult(port, false);
@@ -62,7 +62,7 @@ public class IPScannerService {
     return scanResults;
   }
 
-  static boolean connect(final Socket socket, final String ip, final int port) {
+  boolean connect(final Socket socket, final String ip, final int port) {
     try {
       socket.connect(new InetSocketAddress(ip, port), 200);
       socket.close();
